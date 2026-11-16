@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Orange Watch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: concentric reach — hazards band, five ring cards (Orange outward to World), then a board of five tier columns. */
+:root {
+  --bg: #F2F4F6; --surface: #FFFFFF; --sunk: #E8ECEF; --ink: #15202B; --muted: #5A6774; --line: #D8DEE4;
+  --accent: #D9661A; --accent-ink: #FFFFFF; --mark: #FFE2B8;
+  --t-local: #D9661A; --t-regional: #A88412; --t-state: #2F8565; --t-national: #2F67AA; --t-global: #6650A6;
+  --sev-red: #C3352B; --sev-orange: #D27A0E; --sev-yellow: #B39100; --sev-green: #3F8F4E; --ok: #2F8565;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 6px;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E141A; --surface: #151D25; --sunk: #1B252F; --ink: #E4E9EE; --muted: #8E9AA6; --line: #26323D;
+  --accent: #F08A3C; --accent-ink: #1A0F05; --mark: #5A3A12;
+  --t-local: #F08A3C; --t-regional: #D2AE3A; --t-state: #4DB38C; --t-national: #5C93D6; --t-global: #9784D6;
+  --sev-red: #EF6A5E; --sev-orange: #F0A040; --sev-yellow: #E0C440; --sev-green: #6CC07A; --ok: #4DB38C;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E141A; --surface: #151D25; --sunk: #1B252F; --ink: #E4E9EE; --muted: #8E9AA6; --line: #26323D;
+  --accent: #F08A3C; --accent-ink: #1A0F05; --mark: #5A3A12;
+  --t-local: #F08A3C; --t-regional: #D2AE3A; --t-state: #4DB38C; --t-national: #5C93D6; --t-global: #9784D6;
+  --sev-red: #EF6A5E; --sev-orange: #F0A040; --sev-yellow: #E0C440; --sev-green: #6CC07A; --ok: #4DB38C;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 14px/1.45 var(--f-body); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+button, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1680px; margin: 0 auto; padding-block: 0 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+
+/* Header */
+.top { position: sticky; top: 0; z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; padding-block: 12px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand svg { flex: none; }
+.brand h1 { font: 700 26px/1 var(--f-display); letter-spacing: .02em; margin: 0; text-transform: uppercase; }
+.brand .coords { font: 12px/1.2 var(--f-mono); color: var(--muted); }
+.status { margin-left: auto; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; font: 12px/1.3 var(--f-mono); color: var(--muted); }
+.status b { color: var(--ink); font-weight: 500; }
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-right: 6px; vertical-align: 1px; }
+.dot.warn { background: var(--sev-orange); } .dot.err { background: var(--sev-red); }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 6px 12px; cursor: pointer; font: 600 13px/1 var(--f-body); }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn[aria-busy="true"] { opacity: .6; cursor: progress; }
+
+.label { font: 600 13px/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+section { margin-top: 20px; }
+
+/* Hazards */
+.hazards { display: grid; grid-template-columns: auto 1fr; gap: 12px 16px; align-items: start; }
+.hazards .label { padding-top: 9px; }
+.chips { display: flex; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.hz { display: flex; gap: 10px; align-items: stretch; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; max-width: 100%; min-width: 0; overflow: hidden; }
+.hz:hover { border-color: var(--muted); }
+.hz .sev { width: 4px; flex: none; background: var(--muted); }
+.hz .body { padding: 7px 12px 7px 0; min-width: 0; }
+.hz .what { font-weight: 600; font-size: 13px; overflow-wrap: anywhere; }
+.hz .meta { font: 11px/1.3 var(--f-mono); color: var(--muted); }
+.sev-red { background: var(--sev-red) !important; } .sev-orange { background: var(--sev-orange) !important; }
+.sev-yellow { background: var(--sev-yellow) !important; } .sev-green { background: var(--sev-green) !important; }
+.quiet { color: var(--muted); padding-top: 8px; }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; display: flex; }
+.search input { width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius); padding: 8px 12px; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
+.seg button { border: 0; background: none; padding: 7px 11px; cursor: pointer; font: 500 13px/1 var(--f-body); color: var(--muted); }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+.ctl { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.watch { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.term { display: inline-flex; align-items: center; gap: 4px; background: var(--mark); border-radius: 999px; padding: 3px 4px 3px 10px; font-size: 12.5px; font-weight: 500; }
+.term button { border: 0; background: none; cursor: pointer; width: 18px; height: 18px; border-radius: 50%; line-height: 1; color: var(--muted); }
+.term button:hover { background: var(--surface); color: var(--ink); }
+.term .n { font: 11px var(--f-mono); color: var(--muted); }
+.watch input { border: 1px dashed var(--line); background: transparent; border-radius: 999px; padding: 4px 12px; width: 150px; font-size: 12.5px; }
+
+/* Rings */
+.rings { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+.ring { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 10px; display: grid; gap: 6px; text-align: left; cursor: pointer; min-width: 0; }
+.ring:hover { border-color: var(--muted); }
+.ring[aria-pressed="true"] { border-color: var(--tc); box-shadow: inset 0 0 0 1px var(--tc); }
+.ring .hd { display: flex; align-items: center; gap: 8px; }
+.ring .name { font: 700 18px/1 var(--f-display); text-transform: uppercase; letter-spacing: .03em; }
+.ring .reach { font-size: 12px; color: var(--muted); min-height: 2.6em; }
+.ring .nums { display: flex; gap: 14px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.ring .big { font: 600 26px/1 var(--f-display); }
+.ring .sub { font: 11px var(--f-mono); color: var(--muted); }
+.ring .hits { color: var(--accent); }
+.ring svg.spark { width: 100%; height: 26px; display: block; }
+.glyph { flex: none; }
+
+/* Board */
+.tabs { display: none; }
+.board { display: grid; grid-template-columns: repeat(5, minmax(280px, 1fr)); gap: 12px; overflow-x: auto; padding-bottom: 6px; scroll-snap-type: x proximity; }
+.col { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; display: flex; flex-direction: column; scroll-snap-align: start; max-height: 78vh; }
+.col > header { display: flex; align-items: center; gap: 8px; padding: 11px 14px; border-bottom: 1px solid var(--line); border-top: 3px solid var(--tc); border-radius: var(--radius) var(--radius) 0 0; }
+.col > header h2 { margin: 0; font: 700 17px/1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; }
+.col > header .count { margin-left: auto; font: 12px var(--f-mono); color: var(--muted); }
+.list { overflow-y: auto; flex: 1; }
+.item { padding: 10px 14px 11px; border-bottom: 1px solid var(--line); position: relative; }
+.item:last-child { border-bottom: 0; }
+.item.hit::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; background: var(--accent); border-radius: 0 2px 2px 0; }
+.item .meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font: 11.5px/1.3 var(--f-mono); color: var(--muted); margin-bottom: 3px; }
+.item .src { color: var(--ink); font-weight: 500; }
+.item h3 { margin: 0; font: 500 14px/1.38 var(--f-body); overflow-wrap: anywhere; }
+.item h3 a { text-decoration: none; }
+.item h3 a:hover { text-decoration: underline; text-underline-offset: 2px; }
+.item p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.badge { font: 600 10.5px/1 var(--f-display); letter-spacing: .08em; text-transform: uppercase; padding: 3px 5px 2px; border-radius: 3px; border: 1px solid currentColor; }
+.badge.official { color: var(--t-national); }
+.badge.alert { color: var(--sev-red); }
+mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1px; }
+.empty { padding: 24px 14px; color: var(--muted); font-size: 13px; }
+
+/* Sources */
+details.sources { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+details.sources summary { cursor: pointer; padding: 12px 14px; list-style-position: inside; }
+.tablewrap { overflow-x: auto; border-top: 1px solid var(--line); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { text-align: left; padding: 7px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 600 12px var(--f-display); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+td.num { font: 12px var(--f-mono); text-align: right; font-variant-numeric: tabular-nums; }
+td.err { color: var(--sev-red); white-space: normal; font-size: 12px; min-width: 220px; }
+.foot { margin-top: 16px; color: var(--muted); font-size: 12px; max-width: 80ch; }
+.banner { background: var(--surface); border: 1px solid var(--sev-red); border-radius: var(--radius); padding: 12px 14px; }
+
+.live { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--t-local); margin-right: 6px; vertical-align: 1px; }
+@media (prefers-reduced-motion: no-preference) { .live { animation: pulse 2s ease-in-out infinite; } }
+@keyframes pulse { 50% { opacity: .35; } }
+.badge.new { color: var(--accent); background: var(--mark); border-color: transparent; }
+.badge.city { color: var(--t-local); }
+.newbar { display: block; width: 100%; margin-top: 12px; padding: 9px 14px; border: 1px solid var(--t-local); border-radius: var(--radius); background: var(--mark); color: var(--ink); font: 600 13px/1.3 var(--f-body); text-align: left; cursor: pointer; }
+.colctl { display: flex; gap: 8px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.colctl .seg button { padding: 5px 9px; font-size: 12px; }
+.colctl .sub { font: 11px var(--f-mono); color: var(--muted); }
+td.why { color: var(--muted); font-size: 12px; }
+td.wrap { white-space: normal; min-width: 260px; }
+@media (max-width: 1100px) {
+  .rings { grid-template-columns: repeat(5, minmax(150px, 1fr)); overflow-x: auto; padding-bottom: 4px; }
+}
+@media (max-width: 760px) {
+  .rings { display: none; }
+  .tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+  .tabs button { flex: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 6px 12px; font: 600 14px/1 var(--f-display); text-transform: uppercase; letter-spacing: .04em; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+  .tabs button[aria-selected="true"] { border-color: var(--tc); box-shadow: inset 0 0 0 1px var(--tc); }
+  .tabs .n { font: 11px var(--f-mono); color: var(--muted); }
+  .board { grid-template-columns: minmax(0, 1fr); overflow: visible; }
+  .col { display: none; max-height: none; }
+  .col.on { display: flex; }
+  .hazards { grid-template-columns: 1fr; }
+  .hazards .label { padding-top: 0; }
+  .status { margin-left: 0; }
+  .top { position: static; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <svg class="glyph" width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+        <circle cx="17" cy="17" r="15.5" fill="none" stroke="var(--t-global)" stroke-width="1.5"/>
+        <circle cx="17" cy="17" r="12.5" fill="none" stroke="var(--t-national)" stroke-width="1.5"/>
+        <circle cx="17" cy="17" r="9.5" fill="none" stroke="var(--t-state)" stroke-width="1.5"/>
+        <circle cx="17" cy="17" r="6.5" fill="none" stroke="var(--t-regional)" stroke-width="1.5"/>
+        <circle cx="17" cy="17" r="3.5" fill="var(--t-local)"/>
+      </svg>
+      <div>
+        <h1>Orange Watch</h1>
+        <div class="coords">Plaza Square · 33.7877° N, 117.8531° W</div>
+      </div>
+    </div>
+    <div class="status">
+      <span id="clock">—</span>
+      <span id="health"><span class="dot"></span>— sources</span>
+      <span id="pulled"><span class="live"></span>Orange &amp; OC live</span>
+      <span id="hourly">Other tiers hourly</span>
+      <button class="btn primary" id="refresh" type="button">Refresh all feeds</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="error" class="banner" hidden></div>
+  <button id="newbar" class="newbar" type="button" hidden></button>
+
+  <section class="hazards" aria-labelledby="hz-label">
+    <div class="label" id="hz-label">Active hazards</div>
+    <div class="chips" id="hazards"><span class="quiet">Loading alerts…</span></div>
+  </section>
+
+  <section aria-label="Filters">
+    <div class="controls">
+      <label class="search" for="q"><input id="q" type="search" placeholder="Search headlines and summaries" autocomplete="off"></label>
+      <div class="ctl"><span class="label">Window, other tiers</span>
+        <div class="seg" id="window" role="group" aria-label="Time window">
+          <button type="button" data-v="6">6h</button><button type="button" data-v="24">24h</button><button type="button" data-v="72">3d</button><button type="button" data-v="0">All</button>
+        </div>
+      </div>
+      <div class="ctl"><span class="label">Show</span>
+        <div class="seg" id="kind" role="group" aria-label="Item type">
+          <button type="button" data-v="all">All</button><button type="button" data-v="news">News</button><button type="button" data-v="official">Official</button><button type="button" data-v="alert">Alerts</button><button type="button" data-v="hits">Watchlist</button>
+        </div>
+      </div>
+    </div>
+    <div class="watch" id="watch">
+      <span class="label">Watchlist</span>
+      <span id="terms" style="display:contents"></span>
+      <input id="addterm" type="text" placeholder="+ add term" aria-label="Add watchlist term">
+    </div>
+  </section>
+
+  <section aria-label="Activity by reach">
+    <div class="rings" id="rings"></div>
+  </section>
+
+  <section aria-label="Feeds by reach">
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <details class="sources" id="sources">
+    <summary><span class="label">Source health</span> <span id="srcsum" class="quiet"></span></summary>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Reach</th><th>Source</th><th>Type</th><th style="text-align:right">Items</th><th style="text-align:right">Fetch</th><th>Status</th></tr></thead>
+      <tbody id="srcrows"></tbody>
+    </table></div>
+  </details>
+  <details class="sources" id="filtered">
+    <summary><span class="label">Filtered out of Orange &amp; OC</span> <span id="filtsum" class="quiet"></span></summary>
+    <p class="quiet" style="padding: 0 14px">Recent stories the Orange, California check removed: other states' Oranges, out-of-state outlets, stories that name no Orange County place, and listings or obituaries. Rules live in <code>sources.json</code> under <code>local_filter</code>.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Reason</th><th>Publisher</th><th>Headline</th></tr></thead>
+      <tbody id="filtrows"></tbody>
+    </table></div>
+  </details>
+  <p class="foot">Public feeds only: news RSS, Google News, county, city and state press releases, National Weather Service, USGS, CAL FIRE and GDACS. <span id="cadence">Orange &amp; OC sources are re-checked about every minute (Google News every three) and every story is kept for seven days. The other tiers refresh hourly. This page checks the server every 30 seconds.</span> Edit <code>sources.json</code> to add or remove sources.</p>
+</main>
+
+<script>
+(() => {
+  const TIER_COLOR = { local: "--t-local", regional: "--t-regional", state: "--t-state", national: "--t-national", global: "--t-global" };
+  const DEFAULT_TERMS = ["shooting", "fire", "evacuation", "earthquake", "closure", "outage", "protest", "Santa Ana winds", "flood", "Chapman"];
+  const $ = (id) => document.getElementById(id);
+  const store = {
+    get(k, d) { try { const v = localStorage.getItem("ow:" + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+    set(k, v) { try { localStorage.setItem("ow:" + k, JSON.stringify(v)); } catch {} },
+  };
+  const state = {
+    data: null,
+    windowH: store.get("window", 24),
+    kind: store.get("kind", "all"),
+    q: "",
+    terms: store.get("terms", DEFAULT_TERMS),
+    tab: store.get("tab", "local"),
+    cityOnly: store.get("cityOnly", false),
+    // Local stories this browser has already shown. Anything not in here gets a "New" badge,
+    // so opening the page in the morning flags what arrived overnight.
+    seen: new Set(store.get("seenLocal", []) || []),
+    firstVisit: store.get("seenLocal", null) === null,
+    fresh: new Set(),     // ids shown with a New badge
+    unread: 0,            // count in the new-stories bar
+  };
+
+  // ---- formatting
+  const PT = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", minute: "2-digit", weekday: "short" });
+  const PTD = new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  function ago(ts) {
+    if (!ts) return "undated";
+    const s = Date.now() / 1000 - ts;
+    if (s < 0) return "upcoming";
+    if (s < 3600) return Math.max(1, Math.round(s / 60)) + "m ago";
+    if (s < 86400) return Math.round(s / 3600) + "h ago";
+    return Math.round(s / 86400) + "d ago";
+  }
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v; else if (k === "style") n.style.cssText = v; else n.setAttribute(k, v);
+    }
+    for (const k of kids) if (k != null) n.append(k);
+    return n;
+  }
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  function termRe() {
+    const t = state.terms.filter(Boolean);
+    return t.length ? new RegExp("\\b(" + t.map(escRe).join("|") + ")", "gi") : null;
+  }
+  // Highlight safely: build text nodes and <mark> elements, never innerHTML.
+  function highlight(text, re) {
+    const frag = document.createDocumentFragment();
+    if (!re || !text) { frag.append(text || ""); return frag; }
+    let last = 0; re.lastIndex = 0; let m;
+    while ((m = re.exec(text))) {
+      frag.append(text.slice(last, m.index), el("mark", null, m[0]));
+      last = m.index + m[0].length;
+      if (m[0].length === 0) re.lastIndex++;
+    }
+    frag.append(text.slice(last));
+    return frag;
+  }
+  function glyph(tier, size = 12) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", size); svg.setAttribute("height", size); svg.setAttribute("viewBox", "0 0 12 12"); svg.setAttribute("class", "glyph"); svg.setAttribute("aria-hidden", "true");
+    const c = document.createElementNS(svg.namespaceURI, "circle");
+    c.setAttribute("cx", 6); c.setAttribute("cy", 6); c.setAttribute("r", 4.5); c.setAttribute("fill", "none");
+    c.setAttribute("stroke", `var(${TIER_COLOR[tier]})`); c.setAttribute("stroke-width", 3);
+    svg.append(c);
+    return svg;
+  }
+
+  // ---- filtering
+  function sourceName(id) { return (state.srcById[id] || {}).name || id; }
+  function filtered() {
+    const now = Date.now() / 1000;
+    const re = termRe();
+    const q = state.q.trim().toLowerCase();
+    return state.data.items.filter((it) => {
+      // The Orange & OC column always shows its full 7-day archive; the window applies to the other tiers.
+      if (it.tier !== "local" && state.windowH && (!it.ts || now - it.ts > state.windowH * 3600)) {
+        // Active alerts stay visible regardless of when they were issued.
+        if (!(it.kind === "alert" && it.expires && it.expires > now)) return false;
+      }
+      if (it.tier === "local" && state.cityOnly && !it.city) return false;
+      if (state.kind === "hits") { if (!isHit(it, re)) return false; }
+      else if (state.kind !== "all" && it.kind !== state.kind) return false;
+      if (q && !(it.title + " " + it.summary + " " + (it.via || "") + " " + sourceName(it.source)).toLowerCase().includes(q)) return false;
+      return true;
+    });
+  }
+  function isHit(it, re) { if (!re) return false; re.lastIndex = 0; const r = re.test(it.title + " " + it.summary); re.lastIndex = 0; return r; }
+
+  // ---- render
+  function render() {
+    if (!state.data) return;
+    const re = termRe();
+    const items = filtered();
+    const byTier = {};
+    for (const t of state.data.tiers) byTier[t.id] = [];
+    for (const it of items) (byTier[it.tier] || (byTier[it.tier] = [])).push(it);
+    renderHazards();
+    renderRings(byTier, re);
+    renderTabs(byTier);
+    renderBoard(byTier, re);
+    renderTerms();
+  }
+
+  function renderHazards() {
+    const now = Date.now() / 1000;
+    const rank = { red: 0, orange: 1, yellow: 2, green: 3 };
+    let hz = state.data.items.filter((it) => {
+      if (it.kind !== "alert") return false;
+      if (it.source.startsWith("nws")) return true;
+      if (it.source === "calfire") return true;
+      if (it.source === "usgs-socal") return (it.mag || 0) >= 3.5 && now - it.ts < 86400 * 2;
+      if (it.source === "usgs-sig") return now - it.ts < 86400 * 7;
+      if (it.source === "gdacs") return (it.severity === "red" || it.severity === "orange") && now - it.ts < 86400 * 7;
+      return false;
+    }).sort((a, b) => (["local", "regional", "state", "national", "global"].indexOf(a.tier) - ["local", "regional", "state", "national", "global"].indexOf(b.tier)) || ((rank[a.severity] ?? 4) - (rank[b.severity] ?? 4)) || (b.ts - a.ts));
+    // The same NWS alert can match both the OC and SoCal filters; show it once.
+    const seen = new Set();
+    hz = hz.filter((it) => !seen.has(it.link) && seen.add(it.link));
+    const box = $("hazards"); box.replaceChildren();
+    if (!hz.length) { box.append(el("span", { class: "quiet" }, "No active weather alerts, fires or notable quakes for Orange County and SoCal right now.")); return; }
+    const CAP = 6;
+    for (const it of hz.slice(0, CAP)) {
+      const until = it.expires ? " · until " + PTD.format(new Date(it.expires * 1000)) : " · " + ago(it.ts);
+      box.append(el("a", { class: "hz", href: it.link, target: "_blank", rel: "noopener" },
+        el("span", { class: "sev sev-" + (it.severity || "none") }),
+        el("span", { class: "body" }, el("div", { class: "what" }, it.title.length > 110 ? it.title.slice(0, 108) + "…" : it.title),
+          el("div", { class: "meta" }, sourceName(it.source) + until))));
+    }
+    if (hz.length > CAP) {
+      const more = el("button", { class: "btn", type: "button" }, `+${hz.length - CAP} more`);
+      more.addEventListener("click", () => { state.kind = "alert"; store.set("kind", "alert"); document.querySelectorAll("#kind button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === "alert"))); render(); });
+      box.append(more);
+    }
+  }
+
+  function spark(tier) {
+    const svgNS = "http://www.w3.org/2000/svg";
+    const now = Date.now() / 1000, bins = new Array(24).fill(0);
+    for (const it of state.data.items) if (it.tier === tier && it.ts && now - it.ts < 86400 && now >= it.ts) bins[23 - Math.floor((now - it.ts) / 3600)]++;
+    const max = Math.max(1, ...bins), W = 240, H = 26, bw = W / 24;
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("preserveAspectRatio", "none"); svg.setAttribute("class", "spark");
+    svg.setAttribute("role", "img"); svg.setAttribute("aria-label", `Items per hour, last 24 hours, peak ${max}`);
+    const base = document.createElementNS(svgNS, "line");
+    base.setAttribute("x1", 0); base.setAttribute("x2", W); base.setAttribute("y1", H - .5); base.setAttribute("y2", H - .5);
+    base.setAttribute("stroke", "var(--line)"); svg.append(base);
+    bins.forEach((v, i) => {
+      if (!v) return;
+      const h = Math.max(2, (v / max) * (H - 2));
+      const r = document.createElementNS(svgNS, "rect");
+      r.setAttribute("x", i * bw + 1); r.setAttribute("width", bw - 2); r.setAttribute("y", H - h); r.setAttribute("height", h);
+      r.setAttribute("fill", `var(${TIER_COLOR[tier]})`); r.setAttribute("opacity", i === 23 ? 1 : .55);
+      const t = document.createElementNS(svgNS, "title"); t.textContent = `${v} item${v === 1 ? "" : "s"}, ${23 - i}h ago`; r.append(t);
+      svg.append(r);
+    });
+    return svg;
+  }
+
+  function renderRings(byTier, re) {
+    const box = $("rings"); box.replaceChildren();
+    for (const t of state.data.tiers) {
+      const list = byTier[t.id] || [];
+      const hits = list.filter((i) => isHit(i, re)).length;
+      const srcs = state.data.sources.filter((s) => s.tier === t.id);
+      const b = el("button", { class: "ring", type: "button", style: `--tc: var(${TIER_COLOR[t.id]})`, "aria-pressed": String(state.tab === t.id), title: "Jump to " + t.label },
+        el("div", { class: "hd" }, glyph(t.id, 14), el("span", { class: "name" }, t.label)),
+        el("div", { class: "reach" }, t.reach),
+        el("div", { class: "nums" },
+          el("span", null, el("span", { class: "big" }, String(list.length)), " ", el("span", { class: "sub" }, "items")),
+          el("span", null, el("span", { class: "big hits" }, String(hits)), " ", el("span", { class: "sub" }, "watch hits")),
+          el("span", { class: "sub", style: "margin-left:auto" }, srcs.length + " src")),
+        spark(t.id));
+      b.addEventListener("click", () => {
+        state.tab = t.id; store.set("tab", t.id); render();
+        const col = document.querySelector(`.col[data-tier="${t.id}"]`);
+        if (col) col.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "nearest", inline: "start" });
+      });
+      box.append(b);
+    }
+  }
+
+  function renderTabs(byTier) {
+    const box = $("tabs"); box.replaceChildren();
+    for (const t of state.data.tiers) {
+      const b = el("button", { type: "button", role: "tab", "aria-selected": String(state.tab === t.id), style: `--tc: var(${TIER_COLOR[t.id]})` },
+        glyph(t.id), t.label, el("span", { class: "n" }, String((byTier[t.id] || []).length)));
+      b.addEventListener("click", () => { state.tab = t.id; store.set("tab", t.id); render(); });
+      box.append(b);
+    }
+  }
+
+  function renderBoard(byTier, re) {
+    const board = $("board");
+    const scrolls = {};
+    board.querySelectorAll(".col").forEach((c) => { scrolls[c.dataset.tier] = c.querySelector(".list").scrollTop; });
+    board.replaceChildren();
+    for (const t of state.data.tiers) {
+      const list = byTier[t.id] || [];
+      const ul = el("div", { class: "list" });
+      const isLocal = t.id === "local";
+      // Every local story is shown; other tiers stop at 150 to keep the page quick.
+      const shown = isLocal ? list : list.slice(0, 150);
+      if (!list.length) ul.append(el("div", { class: "empty" }, state.q || state.kind !== "all" || (isLocal && state.cityOnly) ? "Nothing here matches the current filters." : "No items in this time window."));
+      for (const it of shown) {
+        const hit = isHit(it, re);
+        const meta = el("div", { class: "meta" },
+          el("time", { datetime: it.ts ? new Date(it.ts * 1000).toISOString() : null, title: it.ts ? PTD.format(new Date(it.ts * 1000)) + " PT" : null }, ago(it.ts)),
+          // Google News items name the real publisher in `via`; the search feed becomes a muted tag.
+          el("span", { class: "src" }, it.via && it.kind === "news" ? it.via : sourceName(it.source)),
+          it.via && it.kind === "news" && it.via !== sourceName(it.source) ? el("span", null, "· " + sourceName(it.source)) : null,
+          it.kind === "official" ? el("span", { class: "badge official" }, "Official") : null,
+          it.kind === "alert" ? el("span", { class: "badge alert", style: it.severity ? `color: var(--sev-${it.severity})` : null }, "Alert") : null,
+          isLocal && it.city ? el("span", { class: "badge city" }, "City of Orange") : null,
+          state.fresh.has(it.id) ? el("span", { class: "badge new" }, "New") : null);
+        const h3 = el("h3", null, el("a", { href: it.link, target: "_blank", rel: "noopener" }, highlight(it.title, re)));
+        const p = it.summary ? el("p", null, highlight(it.summary, re)) : null;
+        ul.append(el("article", { class: "item" + (hit ? " hit" : "") }, meta, h3, p));
+      }
+      if (shown.length < list.length) ul.append(el("div", { class: "empty" }, `Showing 150 of ${list.length}. Narrow the window or search to see the rest.`));
+      let ctl = null;
+      if (isLocal) {
+        const seg = el("div", { class: "seg", role: "group", "aria-label": "Local scope" });
+        for (const [v, label] of [[false, "All OC"], [true, "City of Orange"]]) {
+          const b = el("button", { type: "button", "aria-pressed": String(state.cityOnly === v) }, label);
+          b.addEventListener("click", () => { state.cityOnly = v; store.set("cityOnly", v); render(); });
+          seg.append(b);
+        }
+        ctl = el("div", { class: "colctl" }, seg, el("span", { class: "sub" }, "All stories, last 7 days ·"), el("span", { class: "sub", "data-tierclock": "local" }, tierClock(t)));
+      }
+      const col = el("div", { class: "col" + (state.tab === t.id ? " on" : ""), "data-tier": t.id, style: `--tc: var(${TIER_COLOR[t.id]})`, role: "region", "aria-label": t.label },
+        el("header", null, glyph(t.id, 14), el("h2", null, t.label), isLocal ? el("span", { class: "live", title: "Live: checked about every minute" }) : null,
+          el("span", { class: "count" }, list.length + " items")), ctl, ul);
+      board.append(col);
+      if (scrolls[t.id]) ul.scrollTop = scrolls[t.id];
+    }
+  }
+
+  function renderTerms() {
+    const re = termRe(), box = $("terms"); box.replaceChildren();
+    const items = filtered();
+    state.terms.forEach((term, i) => {
+      const r = new RegExp("\\b" + escRe(term), "i");
+      const n = items.filter((it) => r.test(it.title + " " + it.summary)).length;
+      const x = el("button", { type: "button", "aria-label": "Remove " + term }, "×");
+      x.addEventListener("click", () => { state.terms.splice(i, 1); store.set("terms", state.terms); render(); });
+      box.append(el("span", { class: "term" }, term, el("span", { class: "n" }, String(n)), x));
+    });
+  }
+
+  function renderSources() {
+    const srcs = state.data.sources;
+    const ok = srcs.filter((s) => s.status === "ok").length, bad = srcs.length - ok;
+    $("health").replaceChildren(el("span", { class: "dot" + (bad ? (ok ? " warn" : " err") : "") }), el("b", null, `${ok}/${srcs.length}`), " sources live");
+    $("srcsum").textContent = bad ? `${bad} need attention` : "all responding";
+    const tiers = Object.fromEntries(state.data.tiers.map((t) => [t.id, t.label]));
+    $("srcrows").replaceChildren(...srcs.map((s) => el("tr", null,
+      el("td", null, glyph(s.tier), " ", tiers[s.tier]),
+      el("td", null, el("a", { href: s.home, target: "_blank", rel: "noopener" }, s.name)),
+      el("td", null, s.kind),
+      el("td", { class: "num" }, String(s.count)),
+      el("td", { class: "num" }, (s.ms / 1000).toFixed(1) + "s"),
+      s.status === "ok" ? el("td", null, el("span", { class: "dot" }), "OK", s.filtered ? el("span", { class: "quiet" }, ` · ${s.filtered} filtered`) : null) : el("td", { class: "err" }, el("span", { class: "dot " + (s.status === "stale" ? "warn" : "err") }), s.status === "stale" ? "Showing last good pull. " : "", s.error || "Failed"))));
+    const f = state.data.filtered || [];
+    $("filtsum").textContent = f.length ? `${f.length} recent` : "none recently";
+    $("filtrows").replaceChildren(...f.map((r) => el("tr", null,
+      el("td", { class: "why" }, r.why), el("td", null, r.via || r.source), el("td", { class: "wrap" }, r.title))));
+  }
+
+  // On the Mac the page talks to server.py; anywhere else (GitHub Pages) it reads the
+  // feed.json that the scheduled GitHub Actions run publishes.
+  const HOSTED = !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname);
+
+  function tierClock(t) {
+    if (!t || !t.last) return "waiting for first check";
+    if (HOSTED && t.id === "local") {
+      const since = Math.max(0, Math.round(Date.now() / 1000 - t.last));
+      const every = (state.data.hosted && state.data.hosted.run_minutes) || 10;
+      return "updated " + (since < 90 ? "just now" : Math.round(since / 60) + "m ago") + ` · every ~${every} min`;
+    }
+    const next = t.next ? Math.max(0, Math.round(t.next - Date.now() / 1000)) : null;
+    const since = Math.max(0, Math.round(Date.now() / 1000 - t.last));
+    const s = since < 60 ? since + "s ago" : Math.round(since / 60) + "m ago";
+    return "checked " + s + (next != null ? " · next in " + (next < 60 ? next + "s" : Math.round(next / 60) + "m") : "");
+  }
+
+  // Compare the local stories with what this browser has already shown.
+  function markNew() {
+    const local = state.data.items.filter((i) => i.tier === "local");
+    let added = 0;
+    for (const it of local) {
+      if (state.seen.has(it.id)) continue;
+      state.seen.add(it.id);
+      if (!state.firstVisit) { state.fresh.add(it.id); added++; }
+    }
+    state.firstVisit = false;
+    // Keep the stored list bounded to what the server still holds.
+    const live = new Set(local.map((i) => i.id));
+    store.set("seenLocal", [...state.seen].filter((id) => live.has(id)));
+    if (added) state.unread += added;
+    const bar = $("newbar");
+    bar.hidden = !state.unread;
+    bar.textContent = `${state.unread} new ${state.unread === 1 ? "story" : "stories"} in Orange & OC since you last looked. Show them`;
+    document.title = (state.unread ? `(${state.unread}) ` : "") + "Orange Watch";
+  }
+
+  // ---- data
+  let pulling = false;
+  async function pull(force) {
+    if (pulling) return; pulling = true;
+    const btn = $("refresh");
+    if (force) { btn.setAttribute("aria-busy", "true"); btn.textContent = "Pulling all feeds…"; }
+    try {
+      const url = HOSTED ? "feed.json?t=" + Date.now() : "/api/feed" + (force ? "?refresh=1" : "");
+      const r = await fetch(url, { cache: "no-store" });
+      if (!r.ok) throw new Error("Server answered " + r.status);
+      const data = await r.json();
+      const changed = !state.data || force || data.version !== state.data.version;
+      state.data = data;
+      state.srcById = Object.fromEntries(data.sources.map((s) => [s.id, s]));
+      $("error").hidden = true;
+      markNew();
+      if (changed) { renderSources(); render(); }
+      stamp();
+    } catch (e) {
+      const box = $("error"); box.hidden = false;
+      box.textContent = HOSTED
+        ? "Couldn't load the latest feeds (" + e.message + "). The page will try again in a minute."
+        : "Couldn't reach the local feed server (" + e.message + "). Make sure python3 server.py is still running, then press Refresh feeds.";
+    } finally { pulling = false; btn.removeAttribute("aria-busy"); btn.textContent = HOSTED ? "Refresh on GitHub" : "Refresh all feeds"; }
+  }
+  function stamp() {
+    $("clock").replaceChildren(el("b", null, PT.format(new Date())), " PT");
+    if (!state.data) return;
+    const tier = (id) => state.data.tiers.find((t) => t.id === id);
+    $("pulled").replaceChildren(el("span", { class: "live" }), "Orange & OC " + (HOSTED ? "" : "live · ") + tierClock(tier("local")).replace(" · next in", ", next in"));
+    const others = state.data.tiers.filter((t) => t.id !== "local" && t.next);
+    const next = others.length ? Math.min(...others.map((t) => t.next)) : null;
+    $("hourly").textContent = "Other tiers hourly" + (next ? " · next " + PT.format(new Date(next * 1000)).replace(/^\w+ /, "") : "");
+    document.querySelectorAll("[data-tierclock]").forEach((n) => { n.textContent = tierClock(tier(n.dataset.tierclock)); });
+  }
+  $("newbar").addEventListener("click", () => {
+    state.unread = 0; $("newbar").hidden = true; document.title = "Orange Watch";
+    if (state.cityOnly) { state.cityOnly = false; store.set("cityOnly", false); }
+    state.tab = "local"; render();
+    const col = document.querySelector('.col[data-tier="local"]');
+    if (col) { col.querySelector(".list").scrollTop = 0; col.scrollIntoView({ block: "nearest", inline: "start" }); }
+  });
+
+  // ---- controls
+  function seg(id, key, parse) {
+    const g = $(id);
+    const sync = () => g.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(parse(b.dataset.v) === state[key])));
+    g.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; state[key] = parse(b.dataset.v); store.set(key === "windowH" ? "window" : key, state[key]); sync(); render(); });
+    sync();
+  }
+  seg("window", "windowH", Number);
+  seg("kind", "kind", String);
+  let qt; $("q").addEventListener("input", (e) => { clearTimeout(qt); qt = setTimeout(() => { state.q = e.target.value; render(); }, 120); });
+  $("addterm").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const v = e.target.value.trim(); if (!v) return;
+    if (!state.terms.some((t) => t.toLowerCase() === v.toLowerCase())) { state.terms.push(v); store.set("terms", state.terms); }
+    e.target.value = ""; render();
+  });
+  // Hosted: the button opens the GitHub "Run workflow" page (a refresh takes 2-3 minutes to publish).
+  $("refresh").addEventListener("click", () => {
+    const gh = HOSTED && state.data && state.data.hosted && state.data.hosted.actions_url;
+    if (gh) window.open(gh, "_blank", "noopener"); else pull(true);
+  });
+  if (HOSTED) $("refresh").textContent = "Refresh on GitHub";
+  if (HOSTED) $("cadence").textContent = "This copy is rebuilt by GitHub Actions about every 10 minutes (GitHub sometimes runs late). Orange & OC is re-checked on every run and kept for seven days; the other tiers refresh hourly. Refresh on GitHub, or the iPhone Shortcut, rebuilds everything in 2-3 minutes.";
+
+  // The server (or GitHub Actions) refreshes tiers on its own schedule; the page just re-reads the result.
+  stamp(); setInterval(stamp, 5000);
+  pull(false); setInterval(() => pull(false), (HOSTED ? 60 : 30) * 1000);
+})();
+</script>
+</body>
+</html>
